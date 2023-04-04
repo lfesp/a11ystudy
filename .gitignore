@@ -1,0 +1,8 @@
+node_modules
+webdrivers
+yarn-error.log
+
+seo_data
+traffic_data_csv
+analysis_reports*
+snapshots*
