@@ -1,0 +1,79 @@
+FULL TRANSFORMATION / SIMPLIFICATION
+
+  jq -s '[.[] |
+  {domain: .domain,
+  snapshot_timestamp,
+  url,
+  rank,
+  organic_traffic,
+  violations: ([.analysis.violations[]? | .id]),
+  passes: ([.analysis.passes[]? | .id]),
+  inapplicable: ([.analysis.inapplicable[]? | .id]),
+  incomplete: ([.analysis.incomplete[]? | .id]),
+  impact: {
+    critical:  ([.analysis.violations[]? | select(.impact == "critical") | .id]),
+    serious: ([.analysis.violations[]? | select(.impact == "serious") | .id]),
+    moderate: ([.analysis.violations[]? | select(.impact == "moderate") | .id]),
+    minor: ([.analysis.violations[]? | select(.impact == "minor") | .id]),
+  },
+  category: {
+    aria:  ([.analysis.violations[]? | select(.tags | index("cat.aria")) | .id] | length),
+    color:  ([.analysis.violations[]? | select(.tags | index("cat.color")) | .id] | length),
+    forms:  ([.analysis.violations[]? | select(.tags | index("cat.forms")) | .id] | length),
+    keyboard:  ([.analysis.violations[]? | select(.tags | index("cat.keyboard")) | .id] | length),
+    language:  ([.analysis.violations[]? | select(.tags | index("cat.language")) | .id] | length),
+    name_role_value: ([.analysis.violations[]? | select(.tags | index("cat.name-role-value")) | .id] | length),
+    parsing:  ([.analysis.violations[]? | select(.tags | index("cat.parsing")) | .id] | length),
+    semantics:  ([.analysis.violations[]? | select(.tags | index("cat.semantics")) | .id] | length),
+    sensory_and_visual_cues:  ([.analysis.violations[]? | select(.tags | index("cat.sensory-and-visual-cues")) | .id] | length),
+    structure:  ([.analysis.violations[]? | select(.tags | index("cat.structure")) | .id] | length),
+    tables:  ([.analysis.violations[]? | select(.tags | index("cat.tables")) | .id] | length),
+    text_alternatives:  ([.analysis.violations[]? | select(.tags | index("cat.text-alternatives")) | .id] | length),
+    time_and_media:  ([.analysis.violations[]? | select(.tags | index("cat.time-and-media")) | .id] | length),
+  }
+}]' *.json
+
+
+GET VIOLATION COUNTS BY SEVERITY
+
+jq -s '[.[] |
+  {domain: .domain,
+  snapshot_timestamp,
+  url,
+  rank,
+  organic_traffic,
+  violations: ([.analysis.violations[]? | .id] | length),
+  passes: ([.analysis.passes[]? | .id] | length),
+  inapplicable: ([.analysis.inapplicable[]? | .id] | length),
+  incomplete: ([.analysis.incomplete[]? | .id] | length),
+  violations_critical:  ([.analysis.violations[]? | select(.impact == "critical") | .id] | length),
+  violations_serious: ([.analysis.violations[]? | select(.impact == "serious") | .id] | length),
+  violations_moderate: ([.analysis.violations[]? | select(.impact == "moderate") | .id] | length),
+  violations_minor: ([.analysis.violations[]? | select(.impact == "minor") | .id] | length),
+  }]' *.json
+
+
+COMPARE SNAPSHOTS FOR A SINGLE DOMAIN
+
+  jq '. |  select(.domain | contains("DOMAIN")) |
+  {domain,
+  snapshot_timestamp,
+  violations_count: (.analysis.violations | length),
+  passes_count: (.analysis.passes | length),
+  incomplete_count: (.analysis.incomplete | length),
+  inapplicable_count: (.analysis.inapplicable | length)}' *.json
+
+GET SNAPSHOT COUNT BY YEAR
+
+ jq '. | select(.snapshot_timestamp | startswith("YEAR")) | .domain' * | wc -l
+
+COUNT OCCURENCES OF A RULE TAG IN SNAPSHOTS
+
+jq '. |  select(.domain | contains("DOMAIN")) |
+{domain,
+snapshot_timestamp,
+violations_count: ([.analysis.violations[].tags[] | select(. | test("TAG"))] | length),
+passes_count: ([.analysis.passes[].tags[] | select(. | test("TAG"))] | length),
+inapplicable_count: ([.analysis.inapplicable[].tags[] | select(. | test("TAG"))] | length),
+incomplete_count: ([.analysis.incomplete[].tags[] | select(. | test("TAG"))] | length),
+}' *.json

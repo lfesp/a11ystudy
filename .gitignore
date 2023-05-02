@@ -2,7 +2,10 @@ node_modules
 webdrivers
 yarn-error.log
 
-seo_data
 traffic_data_csv
-analysis_reports*
-snapshots*
+data
+accessibility_reports
+
+seo_data
+snapshots
+domain_lists
